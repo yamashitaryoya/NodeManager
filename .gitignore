@@ -1,9 +1,2 @@
 # Streamlit secrets file
 .streamlit/secrets.toml
-
-# Python cache files
-*.pyc
-__pycache__/
-
-# OS-specific files
-.DS_Store
