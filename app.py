@@ -98,15 +98,24 @@ def edit_node_ui():
 
 
 def view_nodes_ui():
-    st.header("_View_",divider="blue")
+    st.header("_View_", divider="blue")
     nodes = get_nodes()
-    
-    filtered_nodes = [node for node in nodes if node.nodeName]
-    
+
+    tower_names = get_unique_tower_names(nodes)
+    selected_tower = st.selectbox("Select Tower Name", ["All"] + tower_names)
+
+    filtered_nodes = [node for node in nodes if node.nodeName] 
+
+    if selected_tower != "All":
+        filtered_nodes = [node for node in filtered_nodes if node.towerName == selected_tower]
+
+    # NodeName でソート (A-Z)
+    filtered_nodes = sorted(filtered_nodes, key=lambda x: x.nodeName)
+
     if not filtered_nodes:
         st.error("No nodes found with non-empty names.")
         return
-    
+
     df = pd.DataFrame([
         {
             "Node ID": node.nodeId,
@@ -115,9 +124,7 @@ def view_nodes_ui():
             "Floor Number": node.floorNumber
         } for node in filtered_nodes
     ])
-    
-    df = df.sort_values("Node ID")
-        
+
     st.dataframe(df, use_container_width=True)
 
 def main():
