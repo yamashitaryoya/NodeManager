@@ -14,17 +14,20 @@ container_client = blob_service_client.get_container_client(container_name)
 blob_client = container_client.get_blob_client(blob_name)
 
 class Node:
-    def __init__(self, nodeId, nodeName, floorNumber, towerName):
+    def __init__(self, nodeId, nodeName, floorNumber, towerName, x, y, z):
         self.nodeId = nodeId
         self.nodeName = nodeName
         self.floorNumber = floorNumber
         self.towerName = towerName
+        self.x = x
+        self.y = y
+        self.z = z
 
 def get_nodes():
     try:
         blob_data = blob_client.download_blob().readall()
         nodes_data = json.loads(blob_data)
-        nodes = [Node(node['nodeId'], node['nodeName'], node['floorNumber'], node['towerName']) for node in nodes_data['nodes']]
+        nodes = [Node(node['nodeId'], node['nodeName'], node['floorNumber'], node['towerName'], node['x'], node['y'], node['z']) for node in nodes_data['nodes']]
     except Exception as e:
         nodes = []
         st.error(f"Error reading from blob: {e}")
@@ -38,7 +41,23 @@ def update_node(num, new_name, new_floor, new_tower):
             node.floorNumber = new_floor
             node.towerName = new_tower
             break
-    nodes_json = json.dumps({"nodes": [node.__dict__ for node in nodes]})
+    
+    # nodes_data を再構築
+    nodes_data = {"nodes": [], "edges": []}  # edges も保持
+    for node in nodes:
+        nodes_data["nodes"].append({
+            "nodeId": node.nodeId,
+            "nodeName": node.nodeName,
+            "floorNumber": node.floorNumber,
+            "towerName": node.towerName,
+            "x": node.x,
+            "y": node.y,
+            "z": node.z
+        })
+    # edges を元のデータからコピー
+    nodes_data["edges"] = json.loads(blob_client.download_blob().readall())["edges"]
+
+    nodes_json = json.dumps(nodes_data)
     blob_client.upload_blob(nodes_json, overwrite=True)
 
 def set_page_config():
